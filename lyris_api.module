@@ -1,0 +1,75 @@
+<?php
+define('ADMINISTER_LYRIS', 'administer lyris');
+
+/**
+ * Create a callable instance of the API client.
+ */
+function lyris_api_instantiate() {
+  $password = variable_get('lyris_api_password', '');
+  $site_id = variable_get('lyris_api_site_id', '');
+  if(empty($password) || empty($site_id)) {
+    return FALSE;
+  }
+  if(libraries_load('lyris_api_client')) {
+    return new Lyris\API($site_id, $password);
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function lyris_api_libraries_info() {
+  $libraries['lyris_api_client'] = array(
+    'name' => 'Lyris API PHP Client',
+    'vendor url' => 'https://github.com/th3fallen/Lyris-API',
+    'download url' => 'https://github.com/th3fallen/Lyris-API',
+    'version' => '1',
+    'files' => array(
+      'php' => array(
+        'lyrisapi.php'
+      )
+    )
+  );
+  return $libraries;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function lyris_api_menu() {
+  $items = array();
+  $items['admin/config/services/lyris'] = array(
+    'title' => t('Lyris API'),
+    'access callback' => 'user_access',
+    'access arguments' => array(ADMINISTER_LYRIS),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lyris_api_admin_settings_form'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'lyris_api.admin.inc',
+  );
+
+  $items['lyris'] = array(
+    'title' => t('Lyris API Test'),
+    'access callback' => 'user_access',
+    'access arguments' => array(ADMINISTER_LYRIS),
+    'page callback' => 'lyris_api_test',
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'lyris_api.pages.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function lyris_api_permission() {
+  return array(
+    ADMINISTER_LYRIS => array(
+      'title' => t('Administer Lyris API Settings'),
+      'description' => t('Perform administration tasks for the Lyris API integration module.'),
+    ),
+  );
+}
